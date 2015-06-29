@@ -15,13 +15,14 @@ $key = md5( md5( \IPS\Settings::i()->sql_user . \IPS\Settings::i()->sql_pass ) .
 
 $login_type = 'email';
 
-/* uncomment for more security  */
-// $ip_address = array('127.0.0.1', 'x.x.x.x'); // EDIT THIS LINE!!
-// if(in_array($_SERVER['REMOTE_ADDR'], $ip_address) !== TRUE) {
-	// \IPS\Output::i()->json(array('status' => 'FAILD', 'msg' => 'BAD_IP_ADDR'));
-// }
+/* Alowed IP addresses, uncomment for more security  */
+// $ip_address = array('x.x.x.x'); // EDIT THIS LINE!!
 
 /* -~-~-~-~-~-~ Stop Editing -~-~-~-~-~-~ */
+
+if(isset($ip_address) AND in_array($_SERVER['REMOTE_ADDR'], $ip_address) !== TRUE) {
+	\IPS\Output::i()->json(array('status' => 'FAILD', 'msg' => 'BAD_IP_ADDR'));
+}
 
 if( !\IPS\Request::i()->do || !\IPS\Request::i()->id || !\IPS\Request::i()->key || !\IPS\Login::compareHashes( \IPS\Request::i()->key, md5($key . \IPS\Request::i()->id))) {
 	\IPS\Output::i()->json(array('status' => 'FAILD', 'msg' => 'BAD_KEY'));
@@ -46,6 +47,17 @@ switch(\IPS\Request::i()->do) {
 						'email'						=> $member->email,
 						'name'						=> $member->name,
 						'connect_id'				=> $member->member_id,
+					)
+				);
+		}
+	break;
+	case 'field':
+		$fields = $member->profileFields();
+		if(isset($fields['core_pfieldgroups_' . \IPS\Request::i()->fgroup]) AND isset($fields['core_pfieldgroups_' . \IPS\Request::i()->fgroup]['core_pfield_' . \IPS\Request::i()->fid])) {
+			\IPS\Output::i()->json(
+					array(
+						'status' => 'SUCCESS',
+						'field_value'				=> $fields['core_pfieldgroups_' . \IPS\Request::i()->fgroup]['core_pfield_' . \IPS\Request::i()->fid],
 					)
 				);
 		}
